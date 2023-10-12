@@ -1,27 +1,29 @@
 version: '3.8'
-
+#  docker-compose down -v
+#  docker-compose up --build
 services:
   web:
-    image: artpv/myfirstrepo:web
-    build:
-      dockerfile: ./hello_django/Dockerfile
+#    image: artpv/myfirstrepo:web
+    build: hello_django
     restart: always
-    command: gunicorn hello_django.wsgi:application --bind 0.0.0.0:8000
+    command: sh -c "python manage.py flush --no-input && python manage.py collectstatic --noinput && python manage.py makemigrations && python manage.py migrate && python manage.py createsuperuser --noinput && gunicorn hello_django.wsgi:application --bind 0.0.0.0:8000"
+
     environment:
-      - DJANGO_SUPERUSER_USERNAME=admin
-      - DJANGO_SUPERUSER_PASSWORD=admin
-      - DJANGO_SUPERUSER_EMAIL=admin@example.com
       - POSTGRES_USER=hello_django
+      - POSTGRES_HOST=db
       - POSTGRES_PASSWORD=hello_django
       - POSTGRES_DB=hello_django_dev
       - DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 [::1]
       - SECRET_KEY=django-insecure-cq076cy4v=^&=h@unjgkjqd(p%5^h3!k&mfq@1h(0qjgs&)y33
-      - DEBUG=1
+      - DEBUG=0
     volumes:
       - ./hello_django/:/usr/src/hello_django/
+      # - ./hello_django/static/:/home/app/web/staticfiles/
       - ./hello_django/static/:/usr/src/hello_django/static/
-    ports:
-      - "8000:8000"
+    expose:
+      - 8000
+    # ports:
+    #   - "8000:8000"
     depends_on:
       - db
 
@@ -41,10 +43,12 @@ services:
       timeout: 2s
       retries: 5
   nginx:
-    image: artpv/myfirstrepo:nginx
+    build: nginx
+    # image: artpv/myfirstrepo:nginx
     ports:
       - "1337:80"
     volumes:
+      # - ./hello_django/static/:/home/app/web/staticfiles/
       - ./hello_django/static/:/usr/src/hello_django/static/
     depends_on:
       - web
@@ -52,3 +56,4 @@ services:
 volumes:
   postgres_data:
   static_volume:
+  one_more_volume:
