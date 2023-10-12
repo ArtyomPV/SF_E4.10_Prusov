@@ -3,33 +3,45 @@ version: '3.8'
 services:
   web:
     image: artpv/myfirstrepo:web
-    # build: ./hello_django
+    build:
+      dockerfile: ./hello_django/Dockerfile
     restart: always
-    command: sh -c "python manage.py migrate && python manage.py createsuperuser --noinput && gunicorn hello_django.wsgi:application --bind 0.0.0.0:8000"
+    command: gunicorn hello_django.wsgi:application --bind 0.0.0.0:8000
     environment:
       - DJANGO_SUPERUSER_USERNAME=admin
       - DJANGO_SUPERUSER_PASSWORD=admin
       - DJANGO_SUPERUSER_EMAIL=admin@example.com
+      - POSTGRES_USER=hello_django
+      - POSTGRES_PASSWORD=hello_django
+      - POSTGRES_DB=hello_django_dev
+      - DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 [::1]
+      - SECRET_KEY=django-insecure-cq076cy4v=^&=h@unjgkjqd(p%5^h3!k&mfq@1h(0qjgs&)y33
+      - DEBUG=1
     volumes:
       - ./hello_django/:/usr/src/hello_django/
       - ./hello_django/static/:/usr/src/hello_django/static/
-    expose:
-      - 8000
-    env_file:
-      - ./.env.dev
+    ports:
+      - "8000:8000"
     depends_on:
       - db
+
   db:
     image: postgres:13.0-alpine
+    ports:
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     environment:
       - POSTGRES_USER=hello_django
       - POSTGRES_PASSWORD=hello_django
       - POSTGRES_DB=hello_django_dev
+    healthcheck:
+      test: "pg_isready -U hello_django -d hello_django_dev"
+      interval: 1s
+      timeout: 2s
+      retries: 5
   nginx:
     image: artpv/myfirstrepo:nginx
-    # build: ./nginx
     ports:
       - "1337:80"
     volumes:

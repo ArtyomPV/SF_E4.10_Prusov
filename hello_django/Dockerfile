@@ -16,8 +16,9 @@ RUN apk update \
 RUN pip install --upgrade pip
 COPY ./requirements.txt .
 RUN pip install -r requirements.txt
-
-RUN mkdir /usr/src/hello_django/static
+RUN apt install curl
+RUN python manage.py collectstatic --noinput
+RUN python manage.py migrate
 
 # copy project
 COPY . .
