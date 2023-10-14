@@ -1,10 +1,9 @@
 version: '3.8'
-#  docker-compose down -v
-#  docker-compose up --build
+
 services:
   web:
-#    image: artpv/myfirstrepo:web
-    build: hello_django
+    image: artpv/mysecondrepo:web
+    # build: hello_django
     restart: always
     command: sh -c "python manage.py flush --no-input && python manage.py collectstatic --noinput && python manage.py makemigrations && python manage.py migrate && python manage.py createsuperuser --noinput && gunicorn hello_django.wsgi:application --bind 0.0.0.0:8000"
 
@@ -18,7 +17,6 @@ services:
       - DEBUG=0
     volumes:
       - ./hello_django/:/usr/src/hello_django/
-      # - ./hello_django/static/:/home/app/web/staticfiles/
       - ./hello_django/static/:/usr/src/hello_django/static/
     expose:
       - 8000
@@ -43,12 +41,11 @@ services:
       timeout: 2s
       retries: 5
   nginx:
-    build: nginx
-    # image: artpv/myfirstrepo:nginx
+    image: artpv/mysecondrepo:nginx
+    # build: nginx
     ports:
       - "1337:80"
     volumes:
-      # - ./hello_django/static/:/home/app/web/staticfiles/
       - ./hello_django/static/:/usr/src/hello_django/static/
     depends_on:
       - web
@@ -56,4 +53,3 @@ services:
 volumes:
   postgres_data:
   static_volume:
-  one_more_volume:
